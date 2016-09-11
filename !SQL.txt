@@ -1,0 +1,42 @@
+SELECT  SumLO.id,
+        shifr,
+        flag,
+        Sum(IIf(sum_norm,sum_norm,sum_norm_l)) AS s_norm,
+        date_in,
+        postav,
+        delivery.naim,
+        kod
+FROM (
+    SELECT  info.chex,
+            shifrs.id,
+            shifrs.shifr,
+            shifrs.flag,
+            Sum(info.norm) AS sum_norm,
+            Sum(info.norm_l) AS sum_norm_l,
+            shifrs.date_in,
+            shifrs.postav,
+            shifrs.kod
+    FROM shifrs INNER JOIN info ON shifrs.id = info.num_shifr
+    WHERE (
+        (info.chex = [paramCHEX]) AND
+        (shifrs.shifr Like [paramSHIFR]) AND
+        (info.dse Like [paramDSE]) AND
+        (info.flag <> 1) AND
+        ( (info.srok Is Null) Or (info.srok > Date()) )
+    )
+    GROUP BY info.chex,
+             shifrs.id,
+             shifrs.shifr,
+             shifrs.flag,
+             shifrs.date_in,
+             shifrs.postav,
+             shifrs.kod
+) AS SumLO LEFT JOIN delivery ON (SumLO.postav = delivery.id)
+GROUP BY SumLO.id,
+         shifr,
+         flag,
+         date_in,
+         postav,
+         delivery.naim,
+         kod
+ORDER BY SumLO.id desc;
